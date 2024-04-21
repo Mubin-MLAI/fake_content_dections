@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fake Content Detection</title>
+</head>
+
+<body>
+    <center>
+        <section class="intro-section" id="intro-section">
+            <div class="container">
+                <div class="row justify-content-lg-center align-items-center">
+
+                    <div class="col-lg-6 col-12">
+
+                        <!-- <p>Machine Learning, the theory and development of computer systems able to perform tasks normally requiring
+                            human intelligence, such as visual perception, speech recognition, decision-making, and
+                            translation between languages.</p>
+                        <p>This system is a conjunction of ML and NLP (Natural Language prediction) for fake Content
+                            prediction. It employs the use of machine learning model trained with labeled data to
+                            classify Content in these two broad categories: Real and Fake Content.</p> -->
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        <form action="/" method="POST">
+            <div class="row">
+                <div class="col-lg-12 col-12 text-center">
+                    <h2 class="text-white mb-4">Want To Analyze Content?</h2>
+                </div>
+            </div>
+            <textarea name="txt" rows="16" cols="80">
+            </textarea><br><br>
+            <div class="submit-button-div">
+                <button class="summarize-button" type="submit">Analyze</button>
+            </div>
+        </form>
+        <br />
+
+        <div>
+            <h3>Enterd Text is: </h3>
+            <p style="align-items: center;">{{ request.form['txt'] }}</p>
+
+            <div>
+                <h3> The Machine Learning Model Found That is a:</h3>
+                <p>{% if result == 0 %}
+                <h2><p style="color: red;">Fake Content</p></h2>
+                {% else %}
+                <p>
+                <h2><p style="color:seagreen;">True Content</p></h2>
+                </p>
+                {% endif %}
+                </p>
+            </div>
+        </div>
+    </center>
+</body>
+
+</html>
