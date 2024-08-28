@@ -1,10 +1,14 @@
-<!DOCTYPE html>
+{% extends "layout.html" %}
+
+{% block title %}
+    Main Page
+{% endblock %}
 <html>
 
+{% block main %}
 <head>
     <title>Fake Content Detection</title>
 </head>
-
 <body>
     <center>
         <section class="intro-section" id="intro-section">
@@ -24,7 +28,7 @@
                 </div>
             </div>
         </section>
-        <form action="/" method="POST">
+        <form action="/index" method="POST">
             <div class="row">
                 <div class="col-lg-12 col-12 text-center">
                     <h2 class="text-white mb-4">Want To Analyze Content?</h2>
@@ -56,5 +60,5 @@
         </div>
     </center>
 </body>
-
 </html>
+{% endblock %}
