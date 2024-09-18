@@ -1,25 +1,37 @@
-from flask import Flask, flash,render_template,url_for,request
+
+from flask import Flask, render_template, request , render_template, request, redirect, session, flash
+from werkzeug.security import check_password_hash, generate_password_hash
 import joblib
 import re
 import string
 import pandas as pd
-from flask import Flask, url_for, render_template, request, redirect, session
-from werkzeug.security import check_password_hash, generate_password_hash
+import os
 import sqlite3
 import secrets
 
-
 app = Flask(__name__)
-Model = joblib.load('C:/Users/mubinshaikh/Desktop/fake content identifications/fake_content_dections/model.pkl')
+
+conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
+c = conn.cursor()
+
+c.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    )
+''')
 
 secret_key = secrets.token_hex(24)
 app.secret_key = str(secret_key)
 
+# Correct the path to the model file
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+model_path = os.path.join(parent_dir, "model.pkl")
+print(f"Corrected model path: {model_path}")
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/login")
+# Load the model
+Model = joblib.load(model_path)
 
 @app.route('/')
 def index():
@@ -30,9 +42,36 @@ def index():
     }
     return render_template("login.html", **context)
 
-# @app.route('/login')
-# def login():
-#     return render_template("login.html")
+
+def wordpre(text):
+    text = text.lower()
+    text = re.sub(r'\[.*?\]', '', text)
+    text = re.sub("\\W", " ", text)  # remove special characters
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    text = re.sub('<.*?>+', '', text)
+    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
+    text = re.sub('\n', '', text)
+    text = re.sub(r'\w*\d\w*', '', text)
+    return text
+
+@app.route('/', methods=['POST'])
+def pre():
+    if request.method == 'POST':
+        txt = request.form['txt']
+        txt = wordpre(txt)
+        txt = pd.Series([txt])  # Ensure this is passed as a list or a Series
+        
+        try:
+            result = Model.predict(txt)
+            result = result[0]  # Assuming it's a list/array, get the first prediction
+        except Exception as e:
+            result = f"Error: {str(e)}"
+        
+        return render_template("index.html", result=result)
+    
+
+
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -66,18 +105,7 @@ def login():
         }
         }
         return render_template("login.html", **context)
-
-
-conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
-c = conn.cursor()
-
-c.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
-    )
-''')
+    
 
 @app.route('/register',  methods=['GET', 'POST'])
 def register():
@@ -114,34 +142,13 @@ def register():
         }
         return render_template('register.html', **context)
 
-def wordpre(text):
-    text = text.lower()
-    text = re.sub(r'\[.*?\]', '', text)
-    text = re.sub("\\W"," ",text) # remove special chars
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)
-    text = re.sub('<.*?>+', '', text)
-    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
-    text = re.sub('\n', '', text)
-    text = re.sub(r'\w*\d\w*', '', text)
-    return text
-
-@app.route('/index',methods=['POST'])
-def pre():
-    if request.method == 'POST':
-        txt = request.form['txt']
-        txt = wordpre(txt)
-        txt = pd.Series(txt)
-        result = Model.predict(txt)
-        return render_template("index.html", result = result)
-    return '' 
-    
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-app.config["SECRET_KEY"] = "secretkey"
 
 
 
